@@ -5,12 +5,16 @@ import { Button, Input, Loading } from "mee-components";
 <main class="flex h-full min-h-screen w-full p-4" id="main">
   <article class="flex h-full w-full flex-1 flex-col">
     <div class="flex w-full flex-col items-start justify-center gap-4">
-      <a class="text-base font-semibold leading-6 text-brand-700" href="/#users"
-        ><span class="mr-2">&larr;</span>Back to users</a
-      >
+      <div class="fixed top-0 z-300 h-10 w-full bg-white pt-4">
+        <a
+          class="text-base font-semibold leading-6 text-brand-700"
+          href="/#users"><span class="mr-2">&larr;</span>Back to users</a
+        >
+      </div>
+
       <Loading />
       <section
-        class="hidden w-full flex-col items-start gap-6 rounded-xl bg-white p-8 text-slate-800"
+        class="hidden w-full flex-col items-start gap-6 rounded-xl bg-white p-8 pt-12 text-slate-800"
         id="user-data"
       >
         <div class="flex w-full flex-col gap-6">
@@ -58,43 +62,41 @@ import { Button, Input, Loading } from "mee-components";
 </main>
 
 <script>
-  import { HashRouter, Cookie } from "mee-components";
+  import { checkAdmin } from "@utils/common";
+  import { HashRouter } from "mee-components";
 
   const initUsersItem = async () => {
-    const sideMenu = document.getElementById("side-menu");
-    const user = Cookie.getCookie("admin");
-    if (user) {
+    if (checkAdmin()) {
+      const sideMenu = document.getElementById("side-menu");
       sideMenu?.classList.remove("hidden");
-    } else {
-      window.location.hash = "#sign-in";
-    }
-    const emailInput = document.getElementById(
-      "email"
-    ) as HTMLInputElement | null;
-    const phoneInput = document.getElementById(
-      "phone"
-    ) as HTMLInputElement | null;
+      const emailInput = document.getElementById(
+        "email"
+      ) as HTMLInputElement | null;
+      const phoneInput = document.getElementById(
+        "phone"
+      ) as HTMLInputElement | null;
 
-    const id = document.documentElement.dataset.userId;
+      const id = document.documentElement.dataset.userId;
 
-    if (id != "") {
-      const userData = document.getElementById("user-data");
-      const response = await fetch(
-        "https://randomuser.me/api?seed=test22&results=10"
-      );
-      const loading = document.getElementById("loading");
-      const data = await response.json();
-      const randomUser = data.results[Number(id)];
-      if (randomUser) {
-        userData?.classList.remove("hidden");
-        userData?.classList.add("flex");
-        loading?.classList.add("hidden");
+      if (id != "") {
+        const userData = document.getElementById("user-data");
+        const response = await fetch(
+          "https://randomuser.me/api?seed=test22&results=10"
+        );
+        const loading = document.getElementById("loading");
+        const data = await response.json();
+        const randomUser = data.results[Number(id)];
+        if (randomUser) {
+          userData?.classList.remove("hidden");
+          userData?.classList.add("flex");
+          loading?.classList.add("hidden");
 
-        if (emailInput) {
-          emailInput.value = randomUser.email;
-        }
-        if (phoneInput) {
-          phoneInput.value = randomUser.phone;
+          if (emailInput) {
+            emailInput.value = randomUser.email;
+          }
+          if (phoneInput) {
+            phoneInput.value = randomUser.phone;
+          }
         }
       }
     }

@@ -7,14 +7,17 @@ import { Button, Switch, Loading, Input } from "mee-components";
     class="flex h-full w-full flex-1 flex-col items-center justify-start"
   >
     <div class="flex w-full flex-col items-start justify-center gap-4">
-      <a
-        id="back-to-provider"
-        class="text-base font-semibold leading-6 text-brand-700"
-        ><span class="mr-2">&larr;</span>Back to provider</a
-      >
+      <div class="fixed top-0 z-300 h-10 w-full bg-white pt-4">
+        <a
+          id="back-to-provider"
+          class="text-base font-semibold leading-6 text-brand-700"
+          ><span class="mr-2">&larr;</span>Back to provider</a
+        >
+      </div>
+
       <Loading />
       <section
-        class="hidden w-full flex-col items-start gap-6 rounded-xl bg-white p-8 text-slate-800"
+        class="hidden w-full flex-col items-start gap-6 rounded-xl bg-white p-8 pt-12 text-slate-800"
         id="app-data"
       >
         <div class="flex w-full flex-col gap-6">
@@ -72,61 +75,60 @@ import { Button, Switch, Loading, Input } from "mee-components";
 </main>
 
 <script>
+  import { checkAdmin } from "@utils/common";
   import type { AgentService } from "@utils/types";
-  import { HashRouter, Cookie } from "mee-components";
+  import { HashRouter } from "mee-components";
 
   const initProvidersAgentService = async () => {
-    const sideMenu = document.getElementById("side-menu");
-    const backToProvider = document.getElementById(
-      "back-to-provider"
-    ) as HTMLAnchorElement;
-    const user = Cookie.getCookie("admin");
-    if (user) {
+    if (checkAdmin()) {
+      const sideMenu = document.getElementById("side-menu");
       sideMenu?.classList.remove("hidden");
-    } else {
-      window.location.hash = "#sign-in";
-    }
-    const agentServiceUrlInput = document.getElementById(
-      "agent_service_url"
-    ) as HTMLInputElement | null;
-    const agentServiceIdInput = document.getElementById(
-      "agent_service_id"
-    ) as HTMLInputElement | null;
-    const switcher = document.getElementById(
-      "enabled-switch"
-    ) as HTMLInputElement | null;
+      const backToProvider = document.getElementById(
+        "back-to-provider"
+      ) as HTMLAnchorElement;
 
-    const appData = document.getElementById("app-data");
-    const loading = document.getElementById("loading");
+      const agentServiceUrlInput = document.getElementById(
+        "agent_service_url"
+      ) as HTMLInputElement | null;
+      const agentServiceIdInput = document.getElementById(
+        "agent_service_id"
+      ) as HTMLInputElement | null;
+      const switcher = document.getElementById(
+        "enabled-switch"
+      ) as HTMLInputElement | null;
 
-    const providerId = document.documentElement.dataset.providerId;
+      const appData = document.getElementById("app-data");
+      const loading = document.getElementById("loading");
 
-    if (providerId != "") {
-      backToProvider.href = `#providers/${providerId}`;
-    }
+      const providerId = document.documentElement.dataset.providerId;
 
-    const id = document.documentElement.dataset.agentServiceId;
-    if (id != "") {
-      const response = await fetch("/agent_services.json");
+      if (providerId != "") {
+        backToProvider.href = `#providers/${providerId}`;
+      }
 
-      const data: AgentService[] = await response.json();
+      const id = document.documentElement.dataset.agentServiceId;
+      if (id != "") {
+        const response = await fetch("/agent_services.json");
 
-      const agentService = data.find((item) => item.agent_service_id == id);
+        const data: AgentService[] = await response.json();
 
-      if (agentService) {
-        appData?.classList.remove("hidden");
-        appData?.classList.add("flex");
+        const agentService = data.find((item) => item.agent_service_id == id);
 
-        loading?.classList.add("hidden");
+        if (agentService) {
+          appData?.classList.remove("hidden");
+          appData?.classList.add("flex");
 
-        if (agentServiceUrlInput) {
-          agentServiceUrlInput.value = agentService.agent_service_url;
-        }
-        if (agentServiceIdInput) {
-          agentServiceIdInput.value = agentService.agent_service_id;
-        }
-        if (switcher) {
-          switcher.checked = agentService.enabled;
+          loading?.classList.add("hidden");
+
+          if (agentServiceUrlInput) {
+            agentServiceUrlInput.value = agentService.agent_service_url;
+          }
+          if (agentServiceIdInput) {
+            agentServiceIdInput.value = agentService.agent_service_id;
+          }
+          if (switcher) {
+            switcher.checked = agentService.enabled;
+          }
         }
       }
     }

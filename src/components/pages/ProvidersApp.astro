@@ -7,14 +7,16 @@ import { Button, Switch, Loading, Input } from "mee-components";
     class="flex h-full w-full flex-1 flex-col items-center justify-start"
   >
     <div class="flex w-full flex-col items-start justify-center gap-4">
-      <a
-        id="back-to-provider"
-        class="text-base font-semibold leading-6 text-brand-700"
-        ><span class="mr-2">&larr;</span>Back to provider</a
-      >
+      <div class="fixed top-0 z-300 h-10 w-full bg-white pt-4">
+        <a
+          id="back-to-provider"
+          class="text-base font-semibold leading-6 text-brand-700"
+          ><span class="mr-2">&larr;</span>Back to provider</a
+        >
+      </div>
       <Loading />
       <section
-        class="hidden w-full flex-col items-start gap-6 rounded-xl bg-white p-8 text-slate-800"
+        class="hidden w-full flex-col items-start gap-6 rounded-xl bg-white p-8 pt-12 text-slate-800"
         id="app-data"
       >
         <div class="flex w-full flex-col gap-6">
@@ -90,71 +92,73 @@ import { Button, Switch, Loading, Input } from "mee-components";
 </main>
 
 <script>
+  import { checkAdmin } from "@utils/common";
   import type { ProviderApp } from "@utils/types";
-  import { HashRouter, Cookie } from "mee-components";
+  import { HashRouter } from "mee-components";
 
   const initProvidersApp = async () => {
-    const sideMenu = document.getElementById("side-menu");
-    const backToProvider = document.getElementById(
-      "back-to-provider"
-    ) as HTMLAnchorElement;
-    const user = Cookie.getCookie("admin");
-    if (user) {
+    if (checkAdmin()) {
+      const sideMenu = document.getElementById("side-menu");
       sideMenu?.classList.remove("hidden");
-    } else {
-      window.location.hash = "#sign-in";
-    }
-    const nameInput = document.getElementById(
-      "name"
-    ) as HTMLInputElement | null;
-    const urlInput = document.getElementById("url") as HTMLInputElement | null;
-    const agentServiceUrlInput = document.getElementById(
-      "agent_service_url"
-    ) as HTMLInputElement | null;
-    const agentServiceIdInput = document.getElementById(
-      "agent_service_id"
-    ) as HTMLInputElement | null;
-    const switcher = document.getElementById(
-      "enabled-switch"
-    ) as HTMLInputElement | null;
 
-    const appDataElement = document.getElementById("app-data");
-    const loading = document.getElementById("loading");
+      const backToProvider = document.getElementById(
+        "back-to-provider"
+      ) as HTMLAnchorElement;
 
-    const providerId = document.documentElement.dataset.providerId;
+      const nameInput = document.getElementById(
+        "name"
+      ) as HTMLInputElement | null;
+      const urlInput = document.getElementById(
+        "url"
+      ) as HTMLInputElement | null;
+      const agentServiceUrlInput = document.getElementById(
+        "agent_service_url"
+      ) as HTMLInputElement | null;
+      const agentServiceIdInput = document.getElementById(
+        "agent_service_id"
+      ) as HTMLInputElement | null;
+      const switcher = document.getElementById(
+        "enabled-switch"
+      ) as HTMLInputElement | null;
 
-    if (providerId != "") {
-      backToProvider.href = `#providers/${providerId}`;
-    }
+      const appDataElement = document.getElementById("app-data");
+      const loading = document.getElementById("loading");
 
-    const id = document.documentElement.dataset.appId;
+      const providerId = document.documentElement.dataset.providerId;
 
-    if (id != "") {
-      const response = await fetch("/provider_apps.json");
+      if (providerId != "") {
+        backToProvider.href = `#providers/${providerId}`;
+      }
 
-      const data: ProviderApp[] = await response.json();
-      const appData = data[Number(id)];
+      const id = document.documentElement.dataset.appId;
 
-      if (appData) {
-        appDataElement?.classList.remove("hidden");
-        appDataElement?.classList.add("flex");
+      if (id != "") {
+        const response = await fetch("/provider_apps.json");
 
-        loading?.classList.add("hidden");
+        const data: ProviderApp[] = await response.json();
+        const appData = data[Number(id)];
 
-        if (nameInput) {
-          nameInput.value = appData.name;
-        }
-        if (urlInput) {
-          urlInput.value = appData.url;
-        }
-        if (agentServiceUrlInput) {
-          agentServiceUrlInput.value = appData.agent_service_url;
-        }
-        if (agentServiceIdInput) {
-          agentServiceIdInput.value = appData.agent_service_id;
-        }
-        if (switcher) {
-          switcher.checked = appData.enabled;
+        if (appData) {
+          appDataElement?.classList.remove("hidden");
+          appDataElement?.classList.add("flex");
+
+          loading?.classList.add("hidden");
+
+          if (nameInput) {
+            nameInput.value = appData.name;
+          }
+          if (urlInput) {
+            urlInput.value = appData.url;
+          }
+          if (agentServiceUrlInput) {
+            agentServiceUrlInput.value = appData.agent_service_url;
+          }
+          if (agentServiceIdInput) {
+            agentServiceIdInput.value = appData.agent_service_id;
+          }
+          if (switcher) {
+            switcher.checked = appData.enabled;
+          }
         }
       }
     }

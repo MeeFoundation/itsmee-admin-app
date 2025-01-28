@@ -7,13 +7,16 @@ import { Button, Switch, Loading, Input } from "mee-components";
     class="flex h-full w-full flex-1 flex-col items-center justify-start"
   >
     <div class="flex w-full flex-col items-start justify-center gap-4">
-      <a
-        class="text-base font-semibold leading-6 text-brand-700"
-        href="/#providers"><span class="mr-2">&larr;</span>Back to providers</a
-      >
+      <div class="fixed top-0 z-300 h-10 w-full bg-white pt-4">
+        <a
+          class="text-base font-semibold leading-6 text-brand-700"
+          href="/#providers"
+          ><span class="mr-2">&larr;</span>Back to providers</a
+        >
+      </div>
       <Loading />
       <section
-        class="hidden w-full flex-col items-start gap-6 rounded-xl bg-white p-8 text-slate-800"
+        class="hidden w-full flex-col items-start gap-6 rounded-xl bg-white p-8 pt-12 text-slate-800"
         id="provider-data"
       >
         <div class="flex w-full flex-col gap-6">
@@ -165,181 +168,179 @@ import { Button, Switch, Loading, Input } from "mee-components";
 </main>
 
 <script>
+  import { checkAdmin } from "@utils/common";
   import type { ProviderApp, AgentService } from "@utils/types";
-  import { HashRouter, Cookie } from "mee-components";
+  import { HashRouter } from "mee-components";
 
   const initProvidersItem = async () => {
-    const sideMenu = document.getElementById("side-menu");
-    const user = Cookie.getCookie("admin");
-    if (user) {
+    if (checkAdmin()) {
+      const sideMenu = document.getElementById("side-menu");
       sideMenu?.classList.remove("hidden");
-    } else {
-      window.location.hash = "#sign-in";
-    }
-    const nameInput = document.getElementById(
-      "name"
-    ) as HTMLInputElement | null;
-    const emailInput = document.getElementById(
-      "email"
-    ) as HTMLInputElement | null;
-    const phoneInput = document.getElementById(
-      "phone"
-    ) as HTMLInputElement | null;
+      const nameInput = document.getElementById(
+        "name"
+      ) as HTMLInputElement | null;
+      const emailInput = document.getElementById(
+        "email"
+      ) as HTMLInputElement | null;
+      const phoneInput = document.getElementById(
+        "phone"
+      ) as HTMLInputElement | null;
 
-    const providerData = document.getElementById("provider-data");
-    const loading = document.getElementById("loading");
-    const tabsUl = document.getElementById("tabs-ul");
-    const tabsLi = tabsUl?.querySelectorAll("li");
-    const tabsSpans = tabsUl?.querySelectorAll("span");
-    const editIcon = document.getElementById("edit-icon");
-    const tabpanel = document?.querySelectorAll(
-      ".tabpanel"
-    ) as NodeListOf<HTMLDivElement> | null;
-    tabsLi?.forEach((element) => {
-      element?.addEventListener("click", () => {
-        tabsSpans?.forEach((span) => {
-          delete span.dataset.active;
+      const providerData = document.getElementById("provider-data");
+      const loading = document.getElementById("loading");
+      const tabsUl = document.getElementById("tabs-ul");
+      const tabsLi = tabsUl?.querySelectorAll("li");
+      const tabsSpans = tabsUl?.querySelectorAll("span");
+      const editIcon = document.getElementById("edit-icon");
+      const tabpanel = document?.querySelectorAll(
+        ".tabpanel"
+      ) as NodeListOf<HTMLDivElement> | null;
+      tabsLi?.forEach((element) => {
+        element?.addEventListener("click", () => {
+          tabsSpans?.forEach((span) => {
+            delete span.dataset.active;
+          });
+          tabpanel?.forEach((div) => {
+            div.classList.remove("opacity-100");
+            div.classList.add("opacity-0");
+            delete div.dataset.active;
+          });
+
+          const activeSpan = element.querySelector("span");
+          const activePanelId = activeSpan?.dataset.controls;
+          const activePanel =
+            activePanelId && document.getElementById(activePanelId);
+
+          if (activeSpan) {
+            activeSpan.dataset.active = "true";
+          }
+          if (activePanel) {
+            activePanel.dataset.active = "true";
+            activePanel.classList.remove("opacity-0");
+            activePanel.classList.add("opacity-100");
+          }
         });
-        tabpanel?.forEach((div) => {
-          div.classList.remove("opacity-100");
-          div.classList.add("opacity-0");
-          delete div.dataset.active;
-        });
-
-        const activeSpan = element.querySelector("span");
-        const activePanelId = activeSpan?.dataset.controls;
-        const activePanel =
-          activePanelId && document.getElementById(activePanelId);
-
-        if (activeSpan) {
-          activeSpan.dataset.active = "true";
-        }
-        if (activePanel) {
-          activePanel.dataset.active = "true";
-          activePanel.classList.remove("opacity-0");
-          activePanel.classList.add("opacity-100");
-        }
       });
-    });
 
-    const id = document.documentElement.dataset.providerId;
+      const id = document.documentElement.dataset.providerId;
 
-    if (id != "") {
-      const response = await fetch(
-        "https://randomuser.me/api?seed=test22&results=10"
-      );
-      const data = await response.json();
-      const randomUser = data.results[Number(id)];
-      const appsResponse = await fetch("/provider_apps.json");
-      const appsData: ProviderApp[] = await appsResponse.json();
-      const appsTableBody = document.getElementById("table-apps-body");
+      if (id != "") {
+        const response = await fetch(
+          "https://randomuser.me/api?seed=test22&results=10"
+        );
+        const data = await response.json();
+        const randomUser = data.results[Number(id)];
+        const appsResponse = await fetch("/provider_apps.json");
+        const appsData: ProviderApp[] = await appsResponse.json();
+        const appsTableBody = document.getElementById("table-apps-body");
 
-      const agentServicesResponse = await fetch("/agent_services.json");
-      const agentServicesData: AgentService[] =
-        await agentServicesResponse.json();
-      const agentServicesTableBody = document.getElementById(
-        "table-agent-servises-body"
-      );
+        const agentServicesResponse = await fetch("/agent_services.json");
+        const agentServicesData: AgentService[] =
+          await agentServicesResponse.json();
+        const agentServicesTableBody = document.getElementById(
+          "table-agent-servises-body"
+        );
 
-      if (randomUser) {
-        providerData?.classList.remove("hidden");
-        providerData?.classList.add("flex");
+        if (randomUser) {
+          providerData?.classList.remove("hidden");
+          providerData?.classList.add("flex");
 
-        loading?.classList.add("hidden");
+          loading?.classList.add("hidden");
 
-        if (nameInput) {
-          nameInput.value = `${randomUser.name.first} ${randomUser.name.last}`;
+          if (nameInput) {
+            nameInput.value = `${randomUser.name.first} ${randomUser.name.last}`;
+          }
+          if (emailInput) {
+            emailInput.value = randomUser.email;
+          }
+          if (phoneInput) {
+            phoneInput.value = randomUser.phone;
+          }
         }
-        if (emailInput) {
-          emailInput.value = randomUser.email;
+
+        if (appsData && editIcon && appsTableBody) {
+          appsData.forEach((appData, i: number) => {
+            const tr = document.createElement("tr");
+            tr.className = "border-b border-neutral-200";
+
+            const tdName = document.createElement("td");
+            tdName.className = "whitespace-nowrap px-6 py-4";
+            const tdNameContent = document.createTextNode(appData.name);
+            tdName.appendChild(tdNameContent);
+            const tdUrl = document.createElement("td");
+            tdUrl.className = "whitespace-nowrap px-6 py-4";
+            const tdUrlContent = document.createTextNode(appData.url);
+            tdUrl.appendChild(tdUrlContent);
+
+            const tdAgentServiceUrl = document.createElement("td");
+            tdAgentServiceUrl.className = "whitespace-nowrap px-6 py-4";
+            const tdAgentServiceUrlContent = document.createTextNode(
+              appData.agent_service_url
+            );
+            tdAgentServiceUrl.appendChild(tdAgentServiceUrlContent);
+
+            const tdAgentServiceId = document.createElement("td");
+            tdAgentServiceId.className = "whitespace-nowrap px-6 py-4";
+            const tdAgentServiceIdContent = document.createTextNode(
+              appData.agent_service_id
+            );
+            tdAgentServiceId.appendChild(tdAgentServiceIdContent);
+
+            const tdActions = document.createElement("td");
+            tdActions.className =
+              "flex items-center justify-center whitespace-nowrap px-6 py-4";
+            const icon = editIcon.cloneNode(true);
+            const button = document.createElement("button");
+
+            button.onclick = () => {
+              window.location.hash = `providers/${id}/app/${i}`;
+            };
+            button.appendChild(icon);
+            tdActions.appendChild(button);
+            tr.appendChild(tdName);
+            tr.appendChild(tdUrl);
+            tr.appendChild(tdAgentServiceUrl);
+            tr.appendChild(tdAgentServiceId);
+            tr.appendChild(tdActions);
+            appsTableBody.appendChild(tr);
+          });
         }
-        if (phoneInput) {
-          phoneInput.value = randomUser.phone;
+        if (agentServicesData && editIcon && agentServicesTableBody) {
+          agentServicesData.forEach((agentServiceData) => {
+            const tr = document.createElement("tr");
+            tr.className = "border-b border-neutral-200";
+
+            const tdAgentServiceUrl = document.createElement("td");
+            tdAgentServiceUrl.className = "whitespace-nowrap px-6 py-4";
+            const tdAgentServiceUrlContent = document.createTextNode(
+              agentServiceData.agent_service_url
+            );
+            tdAgentServiceUrl.appendChild(tdAgentServiceUrlContent);
+
+            const tdAgentServiceId = document.createElement("td");
+            tdAgentServiceId.className = "whitespace-nowrap px-6 py-4";
+            const tdAgentServiceIdContent = document.createTextNode(
+              agentServiceData.agent_service_id
+            );
+            tdAgentServiceId.appendChild(tdAgentServiceIdContent);
+
+            const tdActions = document.createElement("td");
+            tdActions.className =
+              "flex items-center justify-center whitespace-nowrap px-6 py-4";
+            const icon = editIcon.cloneNode(true);
+            const button = document.createElement("button");
+
+            button.onclick = () => {
+              window.location.hash = `providers/${id}/agent-service/${agentServiceData.agent_service_id}`;
+            };
+            button.appendChild(icon);
+            tdActions.appendChild(button);
+            tr.appendChild(tdAgentServiceUrl);
+            tr.appendChild(tdAgentServiceId);
+            tr.appendChild(tdActions);
+            agentServicesTableBody.appendChild(tr);
+          });
         }
-      }
-
-      if (appsData && editIcon && appsTableBody) {
-        appsData.forEach((appData, i: number) => {
-          const tr = document.createElement("tr");
-          tr.className = "border-b border-neutral-200";
-
-          const tdName = document.createElement("td");
-          tdName.className = "whitespace-nowrap px-6 py-4";
-          const tdNameContent = document.createTextNode(appData.name);
-          tdName.appendChild(tdNameContent);
-          const tdUrl = document.createElement("td");
-          tdUrl.className = "whitespace-nowrap px-6 py-4";
-          const tdUrlContent = document.createTextNode(appData.url);
-          tdUrl.appendChild(tdUrlContent);
-
-          const tdAgentServiceUrl = document.createElement("td");
-          tdAgentServiceUrl.className = "whitespace-nowrap px-6 py-4";
-          const tdAgentServiceUrlContent = document.createTextNode(
-            appData.agent_service_url
-          );
-          tdAgentServiceUrl.appendChild(tdAgentServiceUrlContent);
-
-          const tdAgentServiceId = document.createElement("td");
-          tdAgentServiceId.className = "whitespace-nowrap px-6 py-4";
-          const tdAgentServiceIdContent = document.createTextNode(
-            appData.agent_service_id
-          );
-          tdAgentServiceId.appendChild(tdAgentServiceIdContent);
-
-          const tdActions = document.createElement("td");
-          tdActions.className =
-            "flex items-center justify-center whitespace-nowrap px-6 py-4";
-          const icon = editIcon.cloneNode(true);
-          const button = document.createElement("button");
-
-          button.onclick = () => {
-            window.location.hash = `providers/${id}/app/${i}`;
-          };
-          button.appendChild(icon);
-          tdActions.appendChild(button);
-          tr.appendChild(tdName);
-          tr.appendChild(tdUrl);
-          tr.appendChild(tdAgentServiceUrl);
-          tr.appendChild(tdAgentServiceId);
-          tr.appendChild(tdActions);
-          appsTableBody.appendChild(tr);
-        });
-      }
-      if (agentServicesData && editIcon && agentServicesTableBody) {
-        agentServicesData.forEach((agentServiceData) => {
-          const tr = document.createElement("tr");
-          tr.className = "border-b border-neutral-200";
-
-          const tdAgentServiceUrl = document.createElement("td");
-          tdAgentServiceUrl.className = "whitespace-nowrap px-6 py-4";
-          const tdAgentServiceUrlContent = document.createTextNode(
-            agentServiceData.agent_service_url
-          );
-          tdAgentServiceUrl.appendChild(tdAgentServiceUrlContent);
-
-          const tdAgentServiceId = document.createElement("td");
-          tdAgentServiceId.className = "whitespace-nowrap px-6 py-4";
-          const tdAgentServiceIdContent = document.createTextNode(
-            agentServiceData.agent_service_id
-          );
-          tdAgentServiceId.appendChild(tdAgentServiceIdContent);
-
-          const tdActions = document.createElement("td");
-          tdActions.className =
-            "flex items-center justify-center whitespace-nowrap px-6 py-4";
-          const icon = editIcon.cloneNode(true);
-          const button = document.createElement("button");
-
-          button.onclick = () => {
-            window.location.hash = `providers/${id}/agent-service/${agentServiceData.agent_service_id}`;
-          };
-          button.appendChild(icon);
-          tdActions.appendChild(button);
-          tr.appendChild(tdAgentServiceUrl);
-          tr.appendChild(tdAgentServiceId);
-          tr.appendChild(tdActions);
-          agentServicesTableBody.appendChild(tr);
-        });
       }
     }
   };

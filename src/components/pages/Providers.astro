@@ -35,76 +35,74 @@ import { Loading } from "mee-components";
 </main>
 
 <script>
-  import { HashRouter, Cookie } from "mee-components";
+  import { checkAdmin } from "@utils/common";
+  import { HashRouter } from "mee-components";
 
   const initProvider = async () => {
-    const sideMenu = document.getElementById("side-menu");
-    const user = Cookie.getCookie("admin");
-    if (user) {
+    if (checkAdmin()) {
+      const sideMenu = document.getElementById("side-menu");
       sideMenu?.classList.remove("hidden");
-    } else {
-      window.location.hash = "#sign-in";
-    }
-    const response = await fetch(
-      "https://randomuser.me/api?seed=test22&results=10"
-    );
-    const data = await response.json();
-    const randomUsers = data.results;
-    const tableBody = document.getElementById("table-body");
-    const usersTable = document.getElementById("users-table");
-    const editIcon = document.getElementById("edit-icon");
-    const loading = document.getElementById("loading");
-
-    if (randomUsers && tableBody && editIcon) {
-      randomUsers.forEach(
-        (
-          randomUser: {
-            email: string;
-            phone: string;
-            name: { first: string; last: string };
-          },
-          i: number
-        ) => {
-          const tr = document.createElement("tr");
-          tr.className = "border-b border-neutral-200";
-
-          const tdName = document.createElement("td");
-          tdName.className = "whitespace-nowrap px-6 py-4";
-          const tdNameContent = document.createTextNode(
-            `${randomUser.name.first} ${randomUser.name.last}`
-          );
-          tdName.appendChild(tdNameContent);
-          const tdEmail = document.createElement("td");
-          tdEmail.className = "whitespace-nowrap px-6 py-4";
-          const tdEmailContent = document.createTextNode(randomUser.email);
-          tdEmail.appendChild(tdEmailContent);
-
-          const tdPhone = document.createElement("td");
-
-          tdPhone.className = "whitespace-nowrap px-6 py-4";
-          const tdPhoneContent = document.createTextNode(randomUser.phone);
-          tdPhone.appendChild(tdPhoneContent);
-          const tdActions = document.createElement("td");
-          tdActions.className =
-            "flex items-center justify-center whitespace-nowrap px-6 py-4";
-          const icon = editIcon.cloneNode(true);
-          const button = document.createElement("button");
-
-          button.onclick = () => {
-            window.location.hash = "providers/" + i;
-          };
-          button.appendChild(icon);
-          tdActions.appendChild(button);
-          tr.appendChild(tdName);
-          tr.appendChild(tdEmail);
-          tr.appendChild(tdPhone);
-          tr.appendChild(tdActions);
-          tableBody.appendChild(tr);
-        }
+      const response = await fetch(
+        "https://randomuser.me/api?seed=test22&results=10"
       );
-      usersTable?.classList.remove("hidden");
-      usersTable?.classList.add("flex");
-      loading?.classList.add("hidden");
+      const data = await response.json();
+      const randomUsers = data.results;
+      const tableBody = document.getElementById("table-body");
+      const usersTable = document.getElementById("users-table");
+      const editIcon = document.getElementById("edit-icon");
+      const loading = document.getElementById("loading");
+
+      if (randomUsers && tableBody && editIcon) {
+        randomUsers.forEach(
+          (
+            randomUser: {
+              email: string;
+              phone: string;
+              name: { first: string; last: string };
+            },
+            i: number
+          ) => {
+            const tr = document.createElement("tr");
+            tr.className = "border-b border-neutral-200";
+
+            const tdName = document.createElement("td");
+            tdName.className = "whitespace-nowrap px-6 py-4";
+            const tdNameContent = document.createTextNode(
+              `${randomUser.name.first} ${randomUser.name.last}`
+            );
+            tdName.appendChild(tdNameContent);
+            const tdEmail = document.createElement("td");
+            tdEmail.className = "whitespace-nowrap px-6 py-4";
+            const tdEmailContent = document.createTextNode(randomUser.email);
+            tdEmail.appendChild(tdEmailContent);
+
+            const tdPhone = document.createElement("td");
+
+            tdPhone.className = "whitespace-nowrap px-6 py-4";
+            const tdPhoneContent = document.createTextNode(randomUser.phone);
+            tdPhone.appendChild(tdPhoneContent);
+            const tdActions = document.createElement("td");
+            tdActions.className =
+              "flex items-center justify-center whitespace-nowrap px-6 py-4";
+            const icon = editIcon.cloneNode(true);
+            const button = document.createElement("button");
+
+            button.onclick = () => {
+              window.location.hash = "providers/" + i;
+            };
+            button.appendChild(icon);
+            tdActions.appendChild(button);
+            tr.appendChild(tdName);
+            tr.appendChild(tdEmail);
+            tr.appendChild(tdPhone);
+            tr.appendChild(tdActions);
+            tableBody.appendChild(tr);
+          }
+        );
+        usersTable?.classList.remove("hidden");
+        usersTable?.classList.add("flex");
+        loading?.classList.add("hidden");
+      }
     }
   };
   HashRouter.initPageListeners("providers", initProvider, "Providers");
