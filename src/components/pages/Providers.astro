@@ -1,5 +1,20 @@
 ---
-import { Loading } from "mee-components";
+import { Loading, Table } from "mee-components";
+const tableColumns = [
+  { name: "name", title: "Name" },
+  { name: "email", title: "Email" },
+  { name: "phone", title: "Phone" },
+  { name: "actions", title: "Actions" },
+];
+
+const actions = [
+  {
+    actionType: "edit",
+    text: "Edit",
+    icon: "pencil",
+    className: "text-brand-700 text-2xl",
+  },
+];
 ---
 
 <main class="flex h-full min-h-screen flex-1">
@@ -7,36 +22,20 @@ import { Loading } from "mee-components";
     class="flex h-full w-full flex-col items-start justify-start gap-6 p-6"
   >
     <Loading />
-    <section class="hidden w-full flex-col" id="users-table">
-      <div class="overflow-x-auto sm:-mx-6 lg:-mx-8">
-        <div class="inline-block min-w-full py-2 sm:px-6 lg:px-8">
-          <div class="overflow-hidden">
-            <table class="text-surface min-w-full text-left text-sm font-light">
-              <thead class="border-b border-neutral-200 font-medium">
-                <tr>
-                  <th scope="col" class="px-6 py-4"> Name </th>
-                  <th scope="col" class="px-6 py-4"> Email </th>
-                  <th scope="col" class="px-6 py-4"> Phone </th>
-                  <th scope="col" class="px-6 py-4 text-center"> Actions </th>
-                </tr>
-              </thead>
-              <tbody id="table-body"> </tbody>
-            </table>
-          </div>
-        </div>
-      </div>
+    <section class="hidden w-full flex-col" id="providers-data">
+      <Table
+        className="border-none"
+        columns={tableColumns}
+        actions={actions}
+        id="users-table"
+      />
     </section>
   </article>
-  <div class="hidden">
-    <div id="edit-icon" class="cursor-pointer">
-      <i class="bi bi-pencil text-2xl text-brand-700"></i>
-    </div>
-  </div>
 </main>
 
 <script>
   import { checkAdmin } from "@utils/common";
-  import { HashRouter } from "mee-components";
+  import { HashRouter, TableHelper } from "mee-components";
 
   const initProvider = async () => {
     if (checkAdmin()) {
@@ -47,13 +46,16 @@ import { Loading } from "mee-components";
       );
       const data = await response.json();
       const randomUsers = data.results;
-      const tableBody = document.getElementById("table-body");
-      const usersTable = document.getElementById("users-table");
-      const editIcon = document.getElementById("edit-icon");
+
+      const providersData = document.getElementById("providers-data");
+      const usersTable = document.getElementById(
+        "users-table"
+      ) as HTMLTableElement;
+
       const loading = document.getElementById("loading");
 
-      if (randomUsers && tableBody && editIcon) {
-        randomUsers.forEach(
+      if (randomUsers) {
+        const formattedUsers = randomUsers.map(
           (
             randomUser: {
               email: string;
@@ -62,45 +64,24 @@ import { Loading } from "mee-components";
             },
             i: number
           ) => {
-            const tr = document.createElement("tr");
-            tr.className = "border-b border-neutral-200";
-
-            const tdName = document.createElement("td");
-            tdName.className = "whitespace-nowrap px-6 py-4";
-            const tdNameContent = document.createTextNode(
-              `${randomUser.name.first} ${randomUser.name.last}`
-            );
-            tdName.appendChild(tdNameContent);
-            const tdEmail = document.createElement("td");
-            tdEmail.className = "whitespace-nowrap px-6 py-4";
-            const tdEmailContent = document.createTextNode(randomUser.email);
-            tdEmail.appendChild(tdEmailContent);
-
-            const tdPhone = document.createElement("td");
-
-            tdPhone.className = "whitespace-nowrap px-6 py-4";
-            const tdPhoneContent = document.createTextNode(randomUser.phone);
-            tdPhone.appendChild(tdPhoneContent);
-            const tdActions = document.createElement("td");
-            tdActions.className =
-              "flex items-center justify-center whitespace-nowrap px-6 py-4";
-            const icon = editIcon.cloneNode(true);
-            const button = document.createElement("button");
-
-            button.onclick = () => {
-              window.location.hash = "providers/" + i;
+            return {
+              name: `${randomUser.name.first} ${randomUser.name.last}`,
+              email: randomUser.email,
+              phone: randomUser.phone,
             };
-            button.appendChild(icon);
-            tdActions.appendChild(button);
-            tr.appendChild(tdName);
-            tr.appendChild(tdEmail);
-            tr.appendChild(tdPhone);
-            tr.appendChild(tdActions);
-            tableBody.appendChild(tr);
           }
         );
-        usersTable?.classList.remove("hidden");
-        usersTable?.classList.add("flex");
+        TableHelper.initTable(usersTable, formattedUsers, [
+          {
+            actionType: "edit",
+            action: (_, index) => {
+              window.location.hash = "providers/" + index;
+            },
+          },
+        ]);
+
+        providersData?.classList.remove("hidden");
+        providersData?.classList.add("flex");
         loading?.classList.add("hidden");
       }
     }

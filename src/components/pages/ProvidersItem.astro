@@ -1,5 +1,26 @@
 ---
-import { Button, Switch, Loading, Input } from "mee-components";
+import { Button, Switch, Loading, Input, Table } from "mee-components";
+const tableColumns = [
+  { name: "name", title: "Name" },
+  { name: "url", title: "Url" },
+  { name: "agent_service_url", title: "Agent Service Url" },
+  { name: "agent_service_id", title: "Agent Service Id" },
+  { name: "actions", title: "Actions" },
+];
+const agentTableColumns = [
+  { name: "agent_service_url", title: "Agent Service Url" },
+  { name: "agent_service_id", title: "Agent Service Id" },
+  { name: "actions", title: "Actions" },
+];
+
+const actions = [
+  {
+    actionType: "edit",
+    text: "Edit",
+    icon: "pencil",
+    className: "text-brand-700 text-2xl",
+  },
+];
 ---
 
 <main class="flex h-full min-h-screen w-full p-4" id="main">
@@ -98,62 +119,24 @@ import { Button, Switch, Loading, Input } from "mee-components";
               role="tabpanel"
               data-active
             >
-              <div class="overflow-x-auto sm:-mx-6 lg:-mx-8">
-                <div class="inline-block min-w-full py-2 sm:px-6 lg:px-8">
-                  <div class="overflow-hidden">
-                    <table
-                      class="text-surface min-w-full text-left text-sm font-light"
-                    >
-                      <thead class="border-b border-neutral-200 font-medium">
-                        <tr>
-                          <th scope="col" class="px-6 py-4"> Name </th>
-                          <th scope="col" class="px-6 py-4"> Url </th>
-                          <th scope="col" class="px-6 py-4">
-                            Agent Service Url
-                          </th>
-                          <th scope="col" class="px-6 py-4">
-                            Agent Service Id
-                          </th>
-                          <th scope="col" class="px-6 py-4 text-center">
-                            Actions
-                          </th>
-                        </tr>
-                      </thead>
-                      <tbody id="table-apps-body"> </tbody>
-                    </table>
-                  </div>
-                </div>
-              </div>
+              <Table
+                className="border-none"
+                columns={tableColumns}
+                actions={actions}
+                id="apps-table"
+              />
             </div>
             <div
               class="tabpanel hidden opacity-0 transition-opacity duration-150 ease-linear data-[active]:block"
               id="tabs-agent-services"
               role="tabpanel"
             >
-              <div class="overflow-x-auto sm:-mx-6 lg:-mx-8">
-                <div class="inline-block min-w-full py-2 sm:px-6 lg:px-8">
-                  <div class="overflow-hidden">
-                    <table
-                      class="text-surface min-w-full text-left text-sm font-light"
-                    >
-                      <thead class="border-b border-neutral-200 font-medium">
-                        <tr>
-                          <th scope="col" class="px-6 py-4">
-                            Agent Service Url
-                          </th>
-                          <th scope="col" class="px-6 py-4">
-                            Agent Service Id
-                          </th>
-                          <th scope="col" class="px-6 py-4 text-center">
-                            Actions
-                          </th>
-                        </tr>
-                      </thead>
-                      <tbody id="table-agent-servises-body"> </tbody>
-                    </table>
-                  </div>
-                </div>
-              </div>
+              <Table
+                className="border-none"
+                columns={agentTableColumns}
+                actions={actions}
+                id="agent-services-table"
+              />
             </div>
           </div>
         </div>
@@ -170,11 +153,12 @@ import { Button, Switch, Loading, Input } from "mee-components";
 <script>
   import { checkAdmin } from "@utils/common";
   import type { ProviderApp, AgentService } from "@utils/types";
-  import { HashRouter } from "mee-components";
+  import { HashRouter, TableHelper } from "mee-components";
 
   const initProvidersItem = async () => {
     if (checkAdmin()) {
       const sideMenu = document.getElementById("side-menu");
+
       sideMenu?.classList.remove("hidden");
       const nameInput = document.getElementById(
         "name"
@@ -185,13 +169,18 @@ import { Button, Switch, Loading, Input } from "mee-components";
       const phoneInput = document.getElementById(
         "phone"
       ) as HTMLInputElement | null;
+      const appsTable = document.getElementById(
+        "apps-table"
+      ) as HTMLTableElement;
+      const agentServicesTable = document.getElementById(
+        "agent-services-table"
+      ) as HTMLTableElement;
 
       const providerData = document.getElementById("provider-data");
       const loading = document.getElementById("loading");
       const tabsUl = document.getElementById("tabs-ul");
       const tabsLi = tabsUl?.querySelectorAll("li");
       const tabsSpans = tabsUl?.querySelectorAll("span");
-      const editIcon = document.getElementById("edit-icon");
       const tabpanel = document?.querySelectorAll(
         ".tabpanel"
       ) as NodeListOf<HTMLDivElement> | null;
@@ -232,14 +221,10 @@ import { Button, Switch, Loading, Input } from "mee-components";
         const randomUser = data.results[Number(id)];
         const appsResponse = await fetch("/provider_apps.json");
         const appsData: ProviderApp[] = await appsResponse.json();
-        const appsTableBody = document.getElementById("table-apps-body");
 
         const agentServicesResponse = await fetch("/agent_services.json");
         const agentServicesData: AgentService[] =
           await agentServicesResponse.json();
-        const agentServicesTableBody = document.getElementById(
-          "table-agent-servises-body"
-        );
 
         if (randomUser) {
           providerData?.classList.remove("hidden");
@@ -258,88 +243,47 @@ import { Button, Switch, Loading, Input } from "mee-components";
           }
         }
 
-        if (appsData && editIcon && appsTableBody) {
-          appsData.forEach((appData, i: number) => {
-            const tr = document.createElement("tr");
-            tr.className = "border-b border-neutral-200";
-
-            const tdName = document.createElement("td");
-            tdName.className = "whitespace-nowrap px-6 py-4";
-            const tdNameContent = document.createTextNode(appData.name);
-            tdName.appendChild(tdNameContent);
-            const tdUrl = document.createElement("td");
-            tdUrl.className = "whitespace-nowrap px-6 py-4";
-            const tdUrlContent = document.createTextNode(appData.url);
-            tdUrl.appendChild(tdUrlContent);
-
-            const tdAgentServiceUrl = document.createElement("td");
-            tdAgentServiceUrl.className = "whitespace-nowrap px-6 py-4";
-            const tdAgentServiceUrlContent = document.createTextNode(
-              appData.agent_service_url
-            );
-            tdAgentServiceUrl.appendChild(tdAgentServiceUrlContent);
-
-            const tdAgentServiceId = document.createElement("td");
-            tdAgentServiceId.className = "whitespace-nowrap px-6 py-4";
-            const tdAgentServiceIdContent = document.createTextNode(
-              appData.agent_service_id
-            );
-            tdAgentServiceId.appendChild(tdAgentServiceIdContent);
-
-            const tdActions = document.createElement("td");
-            tdActions.className =
-              "flex items-center justify-center whitespace-nowrap px-6 py-4";
-            const icon = editIcon.cloneNode(true);
-            const button = document.createElement("button");
-
-            button.onclick = () => {
-              window.location.hash = `providers/${id}/app/${i}`;
+        if (appsData) {
+          const formattedAppsData = appsData.map((appData) => {
+            return {
+              name: appData.name,
+              url: appData.url,
+              agent_service_url: appData.agent_service_url,
+              agent_service_id: appData.agent_service_id,
             };
-            button.appendChild(icon);
-            tdActions.appendChild(button);
-            tr.appendChild(tdName);
-            tr.appendChild(tdUrl);
-            tr.appendChild(tdAgentServiceUrl);
-            tr.appendChild(tdAgentServiceId);
-            tr.appendChild(tdActions);
-            appsTableBody.appendChild(tr);
           });
+
+          TableHelper.initTable(appsTable, formattedAppsData, [
+            {
+              actionType: "edit",
+              action: (_, index) => {
+                window.location.hash = `providers/${id}/app/${index}`;
+              },
+            },
+          ]);
         }
-        if (agentServicesData && editIcon && agentServicesTableBody) {
-          agentServicesData.forEach((agentServiceData) => {
-            const tr = document.createElement("tr");
-            tr.className = "border-b border-neutral-200";
+        if (agentServicesData) {
+          const formattedAgentServicesData = agentServicesData.map(
+            (appData) => {
+              return {
+                agent_service_url: appData.agent_service_url,
+                agent_service_id: appData.agent_service_id,
+              };
+            }
+          );
 
-            const tdAgentServiceUrl = document.createElement("td");
-            tdAgentServiceUrl.className = "whitespace-nowrap px-6 py-4";
-            const tdAgentServiceUrlContent = document.createTextNode(
-              agentServiceData.agent_service_url
-            );
-            tdAgentServiceUrl.appendChild(tdAgentServiceUrlContent);
-
-            const tdAgentServiceId = document.createElement("td");
-            tdAgentServiceId.className = "whitespace-nowrap px-6 py-4";
-            const tdAgentServiceIdContent = document.createTextNode(
-              agentServiceData.agent_service_id
-            );
-            tdAgentServiceId.appendChild(tdAgentServiceIdContent);
-
-            const tdActions = document.createElement("td");
-            tdActions.className =
-              "flex items-center justify-center whitespace-nowrap px-6 py-4";
-            const icon = editIcon.cloneNode(true);
-            const button = document.createElement("button");
-
-            button.onclick = () => {
-              window.location.hash = `providers/${id}/agent-service/${agentServiceData.agent_service_id}`;
-            };
-            button.appendChild(icon);
-            tdActions.appendChild(button);
-            tr.appendChild(tdAgentServiceUrl);
-            tr.appendChild(tdAgentServiceId);
-            tr.appendChild(tdActions);
-            agentServicesTableBody.appendChild(tr);
-          });
+          TableHelper.initTable(
+            agentServicesTable,
+            formattedAgentServicesData,
+            [
+              {
+                actionType: "edit",
+                action: (row, _) => {
+                  window.location.hash = `providers/${id}/agent-service/${row.agent_service_id}`;
+                },
+              },
+            ]
+          );
         }
       }
     }
