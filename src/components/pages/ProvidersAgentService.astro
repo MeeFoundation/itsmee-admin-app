@@ -75,9 +75,47 @@ import { Button, Switch, Loading, Input } from "mee-components";
 </main>
 
 <script>
+  import { getAgentService } from "@api/api";
+  import {
+    getAgentServiceData,
+    setAgentServiceData,
+    subscribeAgentServiceData,
+  } from "@store/AgentServicesStore";
   import { checkAdmin } from "@utils/common";
   import type { AgentService } from "@utils/types";
   import { HashRouter } from "mee-components";
+
+  const setAgentService = (agentService?: AgentService) => {
+    const agentServiceUrlInput = document.getElementById(
+      "agent_service_url"
+    ) as HTMLInputElement | null;
+    const agentServiceIdInput = document.getElementById(
+      "agent_service_id"
+    ) as HTMLInputElement | null;
+    const switcher = document.getElementById(
+      "enabled-switch"
+    ) as HTMLInputElement | null;
+
+    const appData = document.getElementById("app-data");
+    const loading = document.getElementById("loading");
+
+    if (agentService) {
+      appData?.classList.remove("hidden");
+      appData?.classList.add("flex");
+
+      loading?.classList.add("hidden");
+
+      if (agentServiceUrlInput) {
+        agentServiceUrlInput.value = agentService.agent_service_url;
+      }
+      if (agentServiceIdInput) {
+        agentServiceIdInput.value = agentService.agent_service_id;
+      }
+      if (switcher) {
+        switcher.checked = agentService.enabled;
+      }
+    }
+  };
 
   const initProvidersAgentService = async () => {
     if (checkAdmin()) {
@@ -87,49 +125,22 @@ import { Button, Switch, Loading, Input } from "mee-components";
         "back-to-provider"
       ) as HTMLAnchorElement;
 
-      const agentServiceUrlInput = document.getElementById(
-        "agent_service_url"
-      ) as HTMLInputElement | null;
-      const agentServiceIdInput = document.getElementById(
-        "agent_service_id"
-      ) as HTMLInputElement | null;
-      const switcher = document.getElementById(
-        "enabled-switch"
-      ) as HTMLInputElement | null;
-
-      const appData = document.getElementById("app-data");
-      const loading = document.getElementById("loading");
-
       const providerId = document.documentElement.dataset.providerId;
 
       if (providerId != "") {
         backToProvider.href = `#providers/${providerId}`;
       }
 
-      const id = document.documentElement.dataset.agentServiceId;
+      const id = document.documentElement.dataset.agentServiceId as string;
       if (id != "") {
-        const response = await fetch("/agent_services.json");
+        let agentService = getAgentServiceData(Number(id));
+        if (!agentService) {
+          agentService = await getAgentService(id);
 
-        const data: AgentService[] = await response.json();
-
-        const agentService = data.find((item) => item.agent_service_id == id);
-
-        if (agentService) {
-          appData?.classList.remove("hidden");
-          appData?.classList.add("flex");
-
-          loading?.classList.add("hidden");
-
-          if (agentServiceUrlInput) {
-            agentServiceUrlInput.value = agentService.agent_service_url;
-          }
-          if (agentServiceIdInput) {
-            agentServiceIdInput.value = agentService.agent_service_id;
-          }
-          if (switcher) {
-            switcher.checked = agentService.enabled;
-          }
+          agentService && setAgentServiceData(Number(id), agentService);
         }
+        setAgentService(agentService);
+        subscribeAgentServiceData(Number(id), setAgentService);
       }
     }
   };

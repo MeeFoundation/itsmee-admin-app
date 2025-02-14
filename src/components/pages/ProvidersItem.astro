@@ -151,140 +151,200 @@ const actions = [
 </main>
 
 <script>
+  import { getAgentServices, getProvider, getProviderApps } from "@api/api";
+  import {
+    getAgentServicesData,
+    setAgentServicesData,
+    subscribeAgentServicesData,
+  } from "@store/AgentServicesStore";
+  import {
+    getActiveTab,
+    setActiveTab,
+    subscribeActiveTab,
+  } from "@store/ProviderActiveTabStore";
+  import {
+    getProviderAppsData,
+    setProviderAppsData,
+    subscribeProviderAppsData,
+  } from "@store/ProviderAppsStore";
+  import {
+    getProviderData,
+    setProviderData,
+    subscribeProviderData,
+  } from "@store/ProvidersStore";
   import { checkAdmin } from "@utils/common";
-  import type { ProviderApp, AgentService } from "@utils/types";
+  import type { AgentService, ProviderApp, Tab, User } from "@utils/types";
   import { HashRouter, TableHelper } from "mee-components";
+
+  const setProvider = (provider?: User) => {
+    const providerData = document.getElementById("provider-data");
+    const loading = document.getElementById("loading");
+    const nameInput = document.getElementById(
+      "name"
+    ) as HTMLInputElement | null;
+    const emailInput = document.getElementById(
+      "email"
+    ) as HTMLInputElement | null;
+    const phoneInput = document.getElementById(
+      "phone"
+    ) as HTMLInputElement | null;
+    if (provider) {
+      providerData?.classList.remove("hidden");
+      providerData?.classList.add("flex");
+
+      loading?.classList.add("hidden");
+
+      if (nameInput) {
+        nameInput.value = `${provider.name.first} ${provider.name.last}`;
+      }
+      if (emailInput) {
+        emailInput.value = provider.email;
+      }
+      if (phoneInput) {
+        phoneInput.value = provider.phone;
+      }
+    }
+  };
+
+  const setProviderApps = (id?: string, appsData?: ProviderApp[]) => {
+    const appsTable = document.getElementById("apps-table") as HTMLTableElement;
+    if (appsData) {
+      const formattedAppsData = appsData.map((appData) => {
+        return {
+          name: appData.name,
+          url: appData.url,
+          agent_service_url: appData.agent_service_url,
+          agent_service_id: appData.agent_service_id,
+        };
+      });
+
+      TableHelper.initTable(appsTable, formattedAppsData, [
+        {
+          actionType: "edit",
+          action: (_, index) => {
+            window.location.hash = `providers/${id}/app/${index}`;
+          },
+        },
+      ]);
+    }
+  };
+
+  const setAgentServices = (
+    id?: string,
+    agentServicesData?: AgentService[]
+  ) => {
+    const agentServicesTable = document.getElementById(
+      "agent-services-table"
+    ) as HTMLTableElement;
+    if (agentServicesData) {
+      const formattedAgentServicesData = agentServicesData.map((appData) => {
+        return {
+          agent_service_url: appData.agent_service_url,
+          agent_service_id: appData.agent_service_id,
+        };
+      });
+
+      TableHelper.initTable(agentServicesTable, formattedAgentServicesData, [
+        {
+          actionType: "edit",
+          action: (row, _) => {
+            window.location.hash = `providers/${id}/agent-service/${row.agent_service_id}`;
+          },
+        },
+      ]);
+    }
+  };
+
+  const subscribeProvider = async (id?: string) => {
+    let provider = getProviderData(Number(id));
+    if (!provider) {
+      provider = await getProvider(Number(id));
+      setProviderData(Number(id), provider);
+    }
+    setProvider(provider);
+    subscribeProviderData(Number(id), setProvider);
+  };
+
+  const subscribeProviderApps = async (id?: string) => {
+    let appsData = getProviderAppsData();
+    if (!appsData) {
+      appsData = await getProviderApps();
+      setProviderAppsData(appsData);
+    }
+    setProviderApps(id, appsData);
+    subscribeProviderAppsData((providerAppsInfo) => {
+      setProviderApps(id, providerAppsInfo);
+    });
+  };
+  const subscribeAgentServices = async (id?: string) => {
+    let agentServicesData = getAgentServicesData();
+    if (!agentServicesData) {
+      agentServicesData = await getAgentServices();
+      setAgentServicesData(agentServicesData);
+    }
+    setAgentServices(id, agentServicesData);
+    subscribeAgentServicesData((agentServicesInfo) => {
+      setAgentServices(id, agentServicesInfo);
+    });
+  };
+
+  const updateActiveTab = (activeTab: Tab) => {
+    const tabsUl = document.getElementById("tabs-ul");
+    const tabsLi = tabsUl?.querySelectorAll("li");
+    const tabsSpans = tabsUl?.querySelectorAll("span");
+    const tabpanel = document?.querySelectorAll(
+      ".tabpanel"
+    ) as NodeListOf<HTMLDivElement> | null;
+    tabsSpans?.forEach((span) => {
+      delete span.dataset.active;
+    });
+    tabpanel?.forEach((div) => {
+      div.classList.remove("opacity-100");
+      div.classList.add("opacity-0");
+      delete div.dataset.active;
+    });
+
+    tabsLi?.forEach((element) => {
+      const span = element.querySelector("span");
+      const activePanelId = span?.dataset.controls;
+      if (activePanelId === activeTab && span) {
+        span.dataset.active = "true";
+      }
+    });
+
+    const activePanel = activeTab && document.getElementById(activeTab);
+
+    if (activePanel) {
+      activePanel.dataset.active = "true";
+      activePanel.classList.remove("opacity-0");
+      activePanel.classList.add("opacity-100");
+    }
+  };
 
   const initProvidersItem = async () => {
     if (checkAdmin()) {
       const sideMenu = document.getElementById("side-menu");
 
       sideMenu?.classList.remove("hidden");
-      const nameInput = document.getElementById(
-        "name"
-      ) as HTMLInputElement | null;
-      const emailInput = document.getElementById(
-        "email"
-      ) as HTMLInputElement | null;
-      const phoneInput = document.getElementById(
-        "phone"
-      ) as HTMLInputElement | null;
-      const appsTable = document.getElementById(
-        "apps-table"
-      ) as HTMLTableElement;
-      const agentServicesTable = document.getElementById(
-        "agent-services-table"
-      ) as HTMLTableElement;
-
-      const providerData = document.getElementById("provider-data");
-      const loading = document.getElementById("loading");
       const tabsUl = document.getElementById("tabs-ul");
       const tabsLi = tabsUl?.querySelectorAll("li");
-      const tabsSpans = tabsUl?.querySelectorAll("span");
-      const tabpanel = document?.querySelectorAll(
-        ".tabpanel"
-      ) as NodeListOf<HTMLDivElement> | null;
+
+      updateActiveTab(getActiveTab());
+      subscribeActiveTab(updateActiveTab);
       tabsLi?.forEach((element) => {
         element?.addEventListener("click", () => {
-          tabsSpans?.forEach((span) => {
-            delete span.dataset.active;
-          });
-          tabpanel?.forEach((div) => {
-            div.classList.remove("opacity-100");
-            div.classList.add("opacity-0");
-            delete div.dataset.active;
-          });
-
           const activeSpan = element.querySelector("span");
-          const activePanelId = activeSpan?.dataset.controls;
-          const activePanel =
-            activePanelId && document.getElementById(activePanelId);
-
-          if (activeSpan) {
-            activeSpan.dataset.active = "true";
-          }
-          if (activePanel) {
-            activePanel.dataset.active = "true";
-            activePanel.classList.remove("opacity-0");
-            activePanel.classList.add("opacity-100");
-          }
+          const activePanelId = activeSpan?.dataset.controls as Tab;
+          setActiveTab(activePanelId);
         });
       });
 
       const id = document.documentElement.dataset.providerId;
 
       if (id != "") {
-        const response = await fetch(
-          "https://randomuser.me/api?seed=test22&results=10"
-        );
-        const data = await response.json();
-        const randomUser = data.results[Number(id)];
-        const appsResponse = await fetch("/provider_apps.json");
-        const appsData: ProviderApp[] = await appsResponse.json();
-
-        const agentServicesResponse = await fetch("/agent_services.json");
-        const agentServicesData: AgentService[] =
-          await agentServicesResponse.json();
-
-        if (randomUser) {
-          providerData?.classList.remove("hidden");
-          providerData?.classList.add("flex");
-
-          loading?.classList.add("hidden");
-
-          if (nameInput) {
-            nameInput.value = `${randomUser.name.first} ${randomUser.name.last}`;
-          }
-          if (emailInput) {
-            emailInput.value = randomUser.email;
-          }
-          if (phoneInput) {
-            phoneInput.value = randomUser.phone;
-          }
-        }
-
-        if (appsData) {
-          const formattedAppsData = appsData.map((appData) => {
-            return {
-              name: appData.name,
-              url: appData.url,
-              agent_service_url: appData.agent_service_url,
-              agent_service_id: appData.agent_service_id,
-            };
-          });
-
-          TableHelper.initTable(appsTable, formattedAppsData, [
-            {
-              actionType: "edit",
-              action: (_, index) => {
-                window.location.hash = `providers/${id}/app/${index}`;
-              },
-            },
-          ]);
-        }
-        if (agentServicesData) {
-          const formattedAgentServicesData = agentServicesData.map(
-            (appData) => {
-              return {
-                agent_service_url: appData.agent_service_url,
-                agent_service_id: appData.agent_service_id,
-              };
-            }
-          );
-
-          TableHelper.initTable(
-            agentServicesTable,
-            formattedAgentServicesData,
-            [
-              {
-                actionType: "edit",
-                action: (row, _) => {
-                  window.location.hash = `providers/${id}/agent-service/${row.agent_service_id}`;
-                },
-              },
-            ]
-          );
-        }
+        subscribeProvider(id);
+        subscribeProviderApps(id);
+        subscribeAgentServices(id);
       }
     }
   };

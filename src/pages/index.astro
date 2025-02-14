@@ -63,6 +63,12 @@ import { Route } from "mee-components";
   <Route id="not-found" route="404" withoutDarkTheme={true}><NotFound /></Route>
 </Layout>
 <script>
+  import { getProviders } from "@api/api";
+  import { setProvidersData } from "@store/ProvidersStore";
+  import { setUsersData } from "@store/UsersStore";
   import { HashRouter } from "mee-components";
   HashRouter.initRouter();
+  const users = await getProviders();
+  setUsersData(users);
+  setProvidersData(users);
 </script>

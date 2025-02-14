@@ -36,54 +36,50 @@ const actions = [
 <script>
   import { checkAdmin } from "@utils/common";
   import { HashRouter, TableHelper } from "mee-components";
+  import type { User } from "@utils/types";
+  import {
+    getProvidersData,
+    subscribeProvidersData,
+  } from "@store/ProvidersStore";
+  import { setActiveTab } from "@store/ProviderActiveTabStore";
+
+  const setProviders = (providers?: User[]) => {
+    const providersData = document.getElementById("providers-data");
+    const usersTable = document.getElementById(
+      "users-table"
+    ) as HTMLTableElement;
+
+    const loading = document.getElementById("loading");
+    if (providers) {
+      const formattedProviders = providers.map((provider) => {
+        return {
+          name: `${provider.name.first} ${provider.name.last}`,
+          email: provider.email,
+          phone: provider.phone,
+        };
+      });
+      TableHelper.initTable(usersTable, formattedProviders, [
+        {
+          actionType: "edit",
+          action: (_, index) => {
+            window.location.hash = "providers/" + index;
+          },
+        },
+      ]);
+
+      providersData?.classList.remove("hidden");
+      providersData?.classList.add("flex");
+      loading?.classList.add("hidden");
+    }
+  };
 
   const initProvider = async () => {
     if (checkAdmin()) {
       const sideMenu = document.getElementById("side-menu");
       sideMenu?.classList.remove("hidden");
-      const response = await fetch(
-        "https://randomuser.me/api?seed=test22&results=10"
-      );
-      const data = await response.json();
-      const randomUsers = data.results;
-
-      const providersData = document.getElementById("providers-data");
-      const usersTable = document.getElementById(
-        "users-table"
-      ) as HTMLTableElement;
-
-      const loading = document.getElementById("loading");
-
-      if (randomUsers) {
-        const formattedUsers = randomUsers.map(
-          (
-            randomUser: {
-              email: string;
-              phone: string;
-              name: { first: string; last: string };
-            },
-            i: number
-          ) => {
-            return {
-              name: `${randomUser.name.first} ${randomUser.name.last}`,
-              email: randomUser.email,
-              phone: randomUser.phone,
-            };
-          }
-        );
-        TableHelper.initTable(usersTable, formattedUsers, [
-          {
-            actionType: "edit",
-            action: (_, index) => {
-              window.location.hash = "providers/" + index;
-            },
-          },
-        ]);
-
-        providersData?.classList.remove("hidden");
-        providersData?.classList.add("flex");
-        loading?.classList.add("hidden");
-      }
+      setProviders(getProvidersData());
+      subscribeProvidersData(setProviders);
+      setActiveTab("tabs-apps");
     }
   };
   HashRouter.initPageListeners("providers", initProvider, "Providers");

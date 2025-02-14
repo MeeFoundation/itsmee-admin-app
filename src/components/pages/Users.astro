@@ -34,37 +34,46 @@ const actions = [
 </main>
 
 <script>
+  import { getUsersData, subscribeUsersData } from "@store/UsersStore";
   import { checkAdmin } from "@utils/common";
+  import type { User } from "@utils/types";
   import { HashRouter, TableHelper } from "mee-components";
+
+  const setUsers = (users?: User[]) => {
+    const usersTable = document.getElementById(
+      "users-table"
+    ) as HTMLTableElement;
+
+    const usersData = document.getElementById("users-data");
+    const loading = document.getElementById("loading");
+    if (users) {
+      const formattedUsers = users.map((user) => {
+        return {
+          email: user.email,
+          phone: user.phone,
+        };
+      });
+      TableHelper.initTable(usersTable, formattedUsers, [
+        {
+          actionType: "edit",
+          action: (_, index) => {
+            window.location.hash = "users/" + index;
+          },
+        },
+      ]);
+
+      usersData?.classList.remove("hidden");
+      usersData?.classList.add("flex");
+      loading?.classList.add("hidden");
+    }
+  };
   const initUsers = async () => {
     if (checkAdmin()) {
       const sideMenu = document.getElementById("side-menu");
       sideMenu?.classList.remove("hidden");
-      const usersTable = document.getElementById(
-        "users-table"
-      ) as HTMLTableElement;
 
-      const response = await fetch(
-        "https://randomuser.me/api?seed=test22&results=10"
-      );
-      const data = await response.json();
-      const randomUsers = data.results;
-      const usersData = document.getElementById("users-data");
-      const loading = document.getElementById("loading");
-      if (randomUsers) {
-        TableHelper.initTable(usersTable, randomUsers, [
-          {
-            actionType: "edit",
-            action: (_, index) => {
-              window.location.hash = "users/" + index;
-            },
-          },
-        ]);
-
-        usersData?.classList.remove("hidden");
-        usersData?.classList.add("flex");
-        loading?.classList.add("hidden");
-      }
+      setUsers(getUsersData());
+      subscribeUsersData(setUsers);
     }
   };
   HashRouter.initPageListeners("users", initUsers, "Users");
