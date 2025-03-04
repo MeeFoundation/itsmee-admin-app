@@ -14,6 +14,7 @@ import UsersItem from "@components/pages/UsersItem.astro";
 import Users from "@components/pages/Users.astro";
 import NotFound from "@components/pages/NotFound.astro";
 import { Route } from "mee-components";
+import SignUpSoon from "@components/pages/SignUpSoon.astro";
 ---
 
 <Layout title="Welcome to Mee">
@@ -52,7 +53,9 @@ import { Route } from "mee-components";
     withoutDarkTheme={true}><UsersItem /></Route
   >
   <Route id="sign-up" route="sign-up" withoutDarkTheme={true}><SignUp /></Route>
-
+  <Route id="sign-up-soon" route="sign-up-soon" withoutDarkTheme
+    ><SignUpSoon /></Route
+  >
   <Route id="sign-in" route="sign-in" withoutDarkTheme={true}><SignIn /></Route>
   <Route id="restore-password" route="restore-password" withoutDarkTheme={true}
     ><RestorePassword /></Route
